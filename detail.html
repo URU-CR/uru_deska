@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs-CZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detail vyvěšení — Úřední deska ÚRÚ ČR</title>
+<link rel="stylesheet" href="css/deska.css">
+</head>
+<body>
+
+<header class="hlavicka">
+  <div class="obsah">
+    <a class="hlavicka__odkaz" href="https://www.uru.gov.cz/">
+      <img class="hlavicka__logo" src="logo-uru.svg" width="183" height="80"
+           alt="Úřad rozvoje území České republiky">
+    </a>
+  </div>
+</header>
+
+<main class="obsah">
+  <a class="zpet" href="index.html">← Zpět na úřední desku</a>
+  <div id="telo"></div>
+</main>
+
+<footer class="paticka">
+  <div class="obsah">
+    Úřad rozvoje území České republiky · nábřeží Ludvíka Svobody 1222/12, 110 00 Praha 1
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="js/deska.js"></script>
+<script>
+(function () {
+  var id = new URLSearchParams(location.search).get("id");
+  var z = Deska.najdi(window.EDESKA || [], id);
+  var telo = document.getElementById("telo");
+  var e = Deska.esc;
+
+  if (!z) {
+    telo.innerHTML = '<h1>Dokument nenalezen</h1>' +
+      '<p class="podtitulek">Požadovaný záznam na úřední desce není.</p>';
+    document.title = "Dokument nenalezen — Úřední deska ÚRÚ ČR";
+    return;
+  }
+
+  document.title = z.znacka + " — Úřední deska ÚRÚ ČR";
+
+  var radek = function (popis, hodnota) {
+    return '<tr><th scope="row">' + e(popis) + '</th><td>' + (hodnota || "—") + '</td></tr>';
+  };
+
+  var prilohy = z.prilohy.length
+    ? '<ul class="prilohy">' + z.prilohy.map(function (p) {
+        return '<li><a href="prilohy/' + encodeURIComponent(p.soubor) + '">' + e(p.nazev) + '</a>' +
+               (p.velikost ? ' <span class="velikost">(' + e(p.velikost) + ')</span>' : '') + '</li>';
+      }).join("") + '</ul>'
+    : '<p class="velikost">K tomuto vyvěšení nejsou připojeny žádné dokumenty.</p>';
+
+  var dnes = Deska.dnesIso();
+  var stav = (!z.doIso || z.doIso >= dnes) ? "Vyvěšeno" : "Sejmuto";
+
+  /* Převzaté vyvěšení: zobrazuje se původní datum vyvěšení na desce
+     původního úřadu, protože jde o pokračování, nikoli nové vyvěšení. */
+  var blokPrevzeti = z.puvod && z.puvod !== "DESÚ"
+    ? '<h2>Převzetí vyvěšení</h2>' +
+      '<table class="detail">' +
+        radek("Původní úřad", e(z.puvod)) +
+        radek("Vyvěšeno na úřední desce původního úřadu dne", e(z.od)) +
+        radek("Převzato Úřadem rozvoje území ČR dne", e(z.prevzatoDne || "1. 1. 2027")) +
+      '</table>' +
+      '<p class="podtitulek">Úřad rozvoje území České republiky je právním nástupcem ' +
+      'v této věci. Doba vyvěšení běží od původního data vyvěšení.</p>'
+    : '';
+
+  telo.innerHTML =
+    '<h1>' + e(z.nazev) + '</h1>' +
+    '<p class="podtitulek">' + e(z.znacka) + '</p>' +
+
+    '<h2>Detail vyvěšení</h2>' +
+    '<table class="detail">' +
+      radek("Oblast", e(z.oblast)) +
+      radek("Kategorie", e(z.kategorie)) +
+      radek("Název", e(z.nazev)) +
+      radek("Číslo jednací", e(z.znacka)) +
+      radek("Původce", e(z.puvodce)) +
+      radek("Adresát", e(z.adresat)) +
+      radek("Stav", stav) +
+    '</table>' +
+
+    '<h2>Obsah vyvěšení</h2>' + prilohy +
+
+    '<h2>Informace o vyvěšení a zveřejnění</h2>' +
+    '<table class="detail">' +
+      radek("Zveřejněno od", e(z.od)) +
+      radek("Má být vyvěšeno do", e(z.do)) +
+      radek("Zveřejněno způsobem umožňujícím dálkový přístup od", e(z.internetOd || z.od)) +
+    '</table>' +
+
+    blokPrevzeti;
+})();
+</script>
+</body>
+</html>

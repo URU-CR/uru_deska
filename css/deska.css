@@ -1,0 +1,237 @@
+/* =========================================================================
+   Úřední deska ÚRÚ ČR — vizuální vrstva
+   -------------------------------------------------------------------------
+   Vzhled je soustředěn do tohoto souboru. Logika (data.js, index.html)
+   na konkrétní barvy ani rozměry nesahá, takže po dodání návrhu desky
+   od Cognita stačí přepsat proměnné níže, případně celý soubor.
+   Barvy vycházejí z palety design systému gov.cz.
+   ========================================================================= */
+
+:root {
+    --uru-modra:        #2362A2;
+    --uru-modra-tmava:  #1C4776;
+    --uru-modra-svetla: #E5EFF8;
+    --uru-text:         #2E2E2E;
+    --uru-text-slaby:   #686868;
+    --uru-linka:        #D4D4D4;
+    --uru-pozadi:       #FFFFFF;
+    --uru-pozadi-radek: #F5F7FA;
+    --uru-odkaz:        #2362A2;
+    --uru-upozorneni-pozadi: #FEF3CD;
+    --uru-upozorneni-ramecek: #FFC107;
+    --uru-upozorneni-text:   #856404;
+    --uru-sirka:        1200px;
+    --uru-pismo: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: var(--uru-pismo);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--uru-text);
+    background: var(--uru-pozadi);
+}
+
+.obsah {
+    max-width: var(--uru-sirka);
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ---------- Hlavička ---------- */
+
+/* Logo úřadu nese název i znak, hlavička proto zůstává bílá — na modrém
+   podkladu by logo nefungovalo. Modrá linka dole odděluje hlavičku od obsahu. */
+.hlavicka {
+    background: #FFFFFF;
+    padding: 18px 0;
+    border-bottom: 3px solid var(--uru-modra);
+}
+.hlavicka__odkaz {
+    display: inline-block;
+    text-decoration: none;
+}
+.hlavicka__logo {
+    display: block;
+    width: 183px;
+    height: 80px;
+}
+.hlavicka__odkaz:focus { outline: 2px solid var(--uru-modra); outline-offset: 4px; }
+
+/* ---------- Nadpisy ---------- */
+
+h1 {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--uru-modra-tmava);
+    margin: 28px 0 6px;
+}
+h2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--uru-modra-tmava);
+    margin: 32px 0 10px;
+}
+.podtitulek {
+    color: var(--uru-text-slaby);
+    font-size: 15px;
+    margin: 0 0 20px;
+}
+
+/* ---------- Upozornění ---------- */
+
+.upozorneni {
+    background: var(--uru-upozorneni-pozadi);
+    border: 1px solid var(--uru-upozorneni-ramecek);
+    color: var(--uru-upozorneni-text);
+    padding: 12px 16px;
+    margin: 0 0 24px;
+    font-size: 14px;
+}
+
+/* ---------- Filtr ---------- */
+
+.filtr {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    background: var(--uru-pozadi-radek);
+    border: 1px solid var(--uru-linka);
+}
+.filtr label {
+    font-size: 14px;
+    margin-right: 6px;
+}
+.filtr select,
+.filtr input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 6px 8px;
+    border: 1px solid var(--uru-linka);
+    background: #FFFFFF;
+    color: var(--uru-text);
+    margin-right: 18px;
+}
+.filtr input { min-width: 260px; }
+
+/* ---------- Tabulka ---------- */
+
+.pocet {
+    font-size: 14px;
+    color: var(--uru-text-slaby);
+    margin: 0 0 8px;
+}
+
+table.vypis {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+table.vypis caption {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+table.vypis th {
+    text-align: left;
+    font-weight: 500;
+    color: #FFFFFF;
+    background: var(--uru-modra);
+    padding: 10px 12px;
+    border: none;
+}
+table.vypis td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--uru-linka);
+    vertical-align: top;
+}
+table.vypis tbody tr:nth-child(even) td { background: var(--uru-pozadi-radek); }
+
+.sl-kategorie { width: 15%; }
+.sl-nazev     { width: 38%; }
+.sl-znacka    { width: 16%; white-space: nowrap; }
+.sl-datum     { width: 10%; white-space: nowrap; }
+.sl-dokument  { width: 21%; }
+
+a { color: var(--uru-odkaz); }
+a:focus { outline: 2px solid var(--uru-modra); outline-offset: 1px; }
+
+.puvod {
+    display: inline-block;
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 1px 7px;
+    border: 1px solid var(--uru-modra);
+    color: var(--uru-modra-tmava);
+    background: var(--uru-modra-svetla);
+    border-radius: 2px;
+    margin-left: 6px;
+    vertical-align: 1px;
+    white-space: nowrap;
+}
+
+.prazdno {
+    padding: 28px 12px;
+    text-align: center;
+    color: var(--uru-text-slaby);
+}
+
+/* ---------- Detail ---------- */
+
+.zpet { font-size: 14px; display: inline-block; margin: 20px 0 0; }
+
+table.detail {
+    width: 100%;
+    max-width: 820px;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+table.detail th {
+    text-align: left;
+    font-weight: 500;
+    width: 230px;
+    padding: 8px 12px;
+    background: var(--uru-pozadi-radek);
+    border-bottom: 1px solid var(--uru-linka);
+    color: var(--uru-text-slaby);
+}
+table.detail td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--uru-linka);
+}
+ul.prilohy { margin: 0; padding-left: 20px; }
+ul.prilohy li { margin-bottom: 4px; font-size: 14px; }
+.velikost { color: var(--uru-text-slaby); font-size: 13px; }
+
+/* ---------- Patička ---------- */
+
+.paticka {
+    margin-top: 48px;
+    padding: 20px 0 32px;
+    border-top: 1px solid var(--uru-linka);
+    font-size: 13px;
+    color: var(--uru-text-slaby);
+}
+
+/* ---------- Malé displeje a kiosek na výšku ---------- */
+
+@media (max-width: 760px) {
+    .hlavicka { padding: 12px 0; border-bottom-width: 2px; }
+    .hlavicka__logo { width: 138px; height: 60px; }
+    h1 { font-size: 24px; }
+    table.vypis { font-size: 13px; }
+    table.vypis th:nth-child(1),
+    table.vypis td:nth-child(1) { display: none; }
+    .filtr input { min-width: 0; width: 100%; margin-top: 8px; }
+    table.detail th { width: 40%; }
+}
+
+@media print {
+    .filtr, .zpet { display: none; }
+    body { font-size: 11pt; }
+}

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs-CZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Úřední deska — Úřad rozvoje území České republiky</title>
+<link rel="stylesheet" href="css/deska.css">
+</head>
+<body>
+
+<header class="hlavicka">
+  <div class="obsah">
+    <a class="hlavicka__odkaz" href="https://www.uru.gov.cz/">
+      <img class="hlavicka__logo" src="logo-uru.svg" width="183" height="80"
+           alt="Úřad rozvoje území České republiky">
+    </a>
+  </div>
+</header>
+
+<main class="obsah">
+  <h1>Úřední deska</h1>
+  <p class="podtitulek" id="stav"></p>
+
+  <div class="upozorneni" id="upozorneni" hidden></div>
+
+  <div class="filtr">
+    <label for="kategorie">Kategorie:</label>
+    <select id="kategorie"><option value="">Vše</option></select>
+    <label for="hledat">Hledat:</label>
+    <input type="text" id="hledat" placeholder="název nebo číslo jednací">
+  </div>
+
+  <p class="pocet" id="pocet"></p>
+
+  <table class="vypis">
+    <caption>Dokumenty vyvěšené na úřední desce</caption>
+    <thead>
+      <tr>
+        <th class="sl-kategorie" scope="col">Kategorie</th>
+        <th class="sl-nazev" scope="col">Název</th>
+        <th class="sl-znacka" scope="col">Číslo jednací</th>
+        <th class="sl-datum" scope="col">Vyvěšeno</th>
+        <th class="sl-datum" scope="col">Sejmuto bude</th>
+        <th class="sl-dokument" scope="col">Dokument</th>
+      </tr>
+    </thead>
+    <tbody id="vypis"></tbody>
+  </table>
+</main>
+
+<footer class="paticka">
+  <div class="obsah">
+    Úřad rozvoje území České republiky · nábřeží Ludvíka Svobody 1222/12, 110 00 Praha 1
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="js/deska.js"></script>
+<script>
+(function () {
+  var zaznamy = window.EDESKA || [];
+  var telo = document.getElementById("vypis");
+  var poleKat = document.getElementById("kategorie");
+  var poleHledat = document.getElementById("hledat");
+
+  document.getElementById("stav").textContent =
+    "Stav ke dni " + Deska.dnesCesky();
+
+  if (window.EDESKA_UPOZORNENI) {
+    var u = document.getElementById("upozorneni");
+    u.textContent = window.EDESKA_UPOZORNENI;
+    u.hidden = false;
+  }
+
+  Deska.kategorie(zaznamy).forEach(function (k) {
+    var o = document.createElement("option");
+    o.value = k; o.textContent = k;
+    poleKat.appendChild(o);
+  });
+
+  function radek(z) {
+    var prilohy = z.prilohy.map(function (p) {
+      return '<a href="prilohy/' + encodeURIComponent(p.soubor) + '">' +
+             Deska.esc(p.nazev) + '</a>' +
+             (p.velikost ? ' <span class="velikost">(' + Deska.esc(p.velikost) + ')</span>' : '');
+    }).join("<br>") || '<span class="velikost">—</span>';
+
+    return '<tr>' +
+      '<td>' + Deska.esc(z.kategorie) + '</td>' +
+      '<td><a href="detail.html?id=' + encodeURIComponent(z.id) + '">' + Deska.esc(z.nazev) + '</a>' +
+        Deska.znackaPuvodu(z) + '</td>' +
+      '<td>' + Deska.esc(z.znacka) + '</td>' +
+      '<td>' + Deska.esc(z.od) + '</td>' +
+      '<td>' + Deska.esc(z.do) + '</td>' +
+      '<td>' + prilohy + '</td>' +
+      '</tr>';
+  }
+
+  function vykresli() {
+    var k = poleKat.value;
+    var t = poleHledat.value.toLowerCase().trim();
+    var v = Deska.vyveseneDnes(zaznamy).filter(function (z) {
+      if (k && z.kategorie !== k) return false;
+      if (t && (z.nazev + " " + z.znacka).toLowerCase().indexOf(t) === -1) return false;
+      return true;
+    });
+    v.sort(Deska.poradi);
+    telo.innerHTML = v.length
+      ? v.map(radek).join("")
+      : '<tr><td class="prazdno" colspan="6">Žádné dokumenty neodpovídají zadání.</td></tr>';
+    document.getElementById("pocet").textContent =
+      v.length === 1 ? "1 dokument" :
+      (v.length >= 2 && v.length <= 4 ? v.length + " dokumenty" : v.length + " dokumentů");
+  }
+
+  poleKat.addEventListener("change", vykresli);
+  poleHledat.addEventListener("input", vykresli);
+  vykresli();
+})();
+</script>
+</body>
+</html>
