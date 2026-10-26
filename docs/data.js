@@ -1559,4 +1559,4 @@ window.EDESKA = [
 window.EDESKA_UPOZORNENI = "";
 /* Do tohoto okamžiku vystupuje deska jako DESÚ a skrývá převzatá
    vyvěšení; od něj jako ÚRÚ ČR a zobrazí je. Místní čas. */
-window.EDESKA_PRECHOD = "2027-01-01T00:00:00";
+window.EDESKA_PRECHOD = "2026-10-26T13:50:00";
