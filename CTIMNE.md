@@ -15,6 +15,20 @@ docs/                ← obsah, který se nahrává na web
   prilohy/             sem patří PDF dokumenty
 ```
 
+## Nastavení (jednou)
+
+Nahrávání desítek příloh přes webové rozhraní GitHubu je nespolehlivé — má
+strop 100 souborů na dávku, 25 MB na soubor a často spadne. Použij **GitHub
+Desktop** (desktop.github.com):
+
+1. *File → Clone repository* → `URU-CR/uru_deska` → vyber místo na disku
+2. Změny pak děláš přímo v té složce
+3. V GitHub Desktopu napiš popis, *Commit to main*, *Push origin*
+
+Limit je pak 100 MB na soubor, počet souborů neomezený a přerušený push
+jde zopakovat. Naklonovaná složka zároveň slouží jako pracovní — admin
+otevírej přímo z ní a `data.js` z administrace stahuj do `docs/`.
+
 ## Postup
 
 **1. Vytěžení desky DESÚ** (plán: 29. 12. 2026, před začátkem přechodového okna)
