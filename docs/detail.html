@@ -43,9 +43,7 @@
 
 <script>
 (function () {
-  document.getElementById("paticka").textContent = Deska.urad().adresa;
-  Deska.naplanujObnovu();
-
+function vykresliDetail() {
   var id = new URLSearchParams(location.search).get("id");
   /* Převzatá vyvěšení nejsou do okamžiku přechodu součástí desky. */
   var dostupne = (window.EDESKA || []).filter(function (x) {
@@ -58,7 +56,7 @@
   if (!z) {
     telo.innerHTML = '<h1>Dokument nenalezen</h1>' +
       '<p class="podtitulek">Požadovaný záznam na úřední desce není.</p>';
-    document.title = "Dokument nenalezen — Úřední deska ÚRÚ ČR";
+    document.title = "Dokument nenalezen — Úřední deska " + Deska.urad().nazev;
     return;
   }
 
@@ -116,6 +114,14 @@
     '</table>' +
 
     blokPrevzeti;
+}
+
+document.getElementById("paticka").textContent = Deska.urad().adresa;
+vykresliDetail();
+Deska.hlidejCas(function () {
+  document.getElementById("paticka").textContent = Deska.urad().adresa;
+  vykresliDetail();
+});
 })();
 </script>
 </body>

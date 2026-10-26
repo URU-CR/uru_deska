@@ -47,9 +47,12 @@ Obsah schránky vlož v `deska-admin.html` do kroku 1.
 
 **2. Přílohy**
 
-V kroku 4 klikni na *Stáhnout všechny přílohy z desky*. Prohlížeč se jednou zeptá,
-jestli povolit stahování více souborů — povol to. Soubory přistanou ve složce
-Stahování; přesuň je do `docs/prilohy/` **beze změny názvu**.
+Aby přílohy přistály rovnou na správném místě, přesměruj napřed stahování:
+**Safari → Nastavení → Obecné → Místo pro stahování → Jiné…** a vyber
+`docs/prilohy/` v naklonovaném repozitáři. Po stažení vrať zpět na *Stahování*.
+
+Pak v kroku 4 klikni na *Stáhnout všechny přílohy z desky*. Prohlížeč se jednou
+zeptá, jestli povolit stahování více souborů — povol to. Názvy souborů neměň.
 
 Pak stáhni kontrolní seznam CSV a porovnej, že ve složce nic nechybí.
 

@@ -124,13 +124,25 @@
       (v.length >= 2 && v.length <= 4 ? v.length + " dokumenty" : v.length + " dokumentů");
   }
 
-  document.getElementById("paticka").textContent = Deska.urad().adresa;
-  document.title = "Úřední deska — " + Deska.urad().nazev;
+  function obnovHlavicku() {
+    document.getElementById("paticka").textContent = Deska.urad().adresa;
+    document.title = "Úřední deska — " + Deska.urad().nazev;
+    document.getElementById("stav").textContent = "Stav ke dni " + Deska.dnesCesky();
+    var vybrano = poleKat.value;
+    poleKat.innerHTML = '<option value="">Vše</option>';
+    Deska.kategorie(zaznamy).forEach(function (k) {
+      var o = document.createElement("option");
+      o.value = k; o.textContent = k;
+      if (k === vybrano) o.selected = true;
+      poleKat.appendChild(o);
+    });
+  }
+  obnovHlavicku();
 
   poleKat.addEventListener("change", vykresli);
   poleHledat.addEventListener("input", vykresli);
   vykresli();
-  Deska.naplanujObnovu();
+  Deska.hlidejCas(function () { obnovHlavicku(); vykresli(); });
 })();
 </script>
 </body>

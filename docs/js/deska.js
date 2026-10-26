@@ -97,21 +97,38 @@ var Deska = (function () {
     return null;
   }
 
-  /* Na kiosku zůstává stránka otevřená celé dny. Bez tohohle by dokumenty
-     nezmizely o půlnoci a deska by se v okamžik přechodu nepřepnula. */
-  function naplanujObnovu() {
-    var ted = new Date();
-    var pulnoc = new Date(ted.getFullYear(), ted.getMonth(), ted.getDate() + 1, 0, 0, 5);
-    var cil = pulnoc;
-    var p = okamzikPrechodu();
-    if (p && p > ted && p < cil) cil = new Date(p.getTime() + 5000);
+  /* Na kiosku zůstává stránka otevřená celé dny. Bez hlídání by o půlnoci
+     nezmizely dokumenty s uplynulou dobou vyvěšení a v okamžik přechodu by
+     se deska nepřepnula.
 
-    var za = cil.getTime() - ted.getTime();
-    /* setTimeout má strop kolem 24,8 dne; delší čekání se dělí na kroky. */
-    var krok = Math.min(za, 60 * 60 * 1000);
-    setTimeout(function () {
-      if (new Date() >= cil) { location.reload(); } else { naplanujObnovu(); }
-    }, krok);
+     Nestačí jeden setTimeout: prohlížeče časovače na neaktivní kartě silně
+     zpomalují, takže by se spustil se zpožděním. Proto se stav kontroluje
+     opakovaně a navíc vždy, když se stránka vrátí do popředí. */
+  function stav(kdy) { return klicUradu(kdy) + "|" + dnesIso(kdy); }
+
+  function hlidejCas(prekresli) {
+    var posledni = stav();
+
+    function zkontroluj() {
+      var ted = stav();
+      if (ted === posledni) return;
+      posledni = ted;
+
+      /* Nejdřív překreslit na místě — to nemůže selhat ani bez sítě. */
+      document.documentElement.setAttribute("data-urad", klicUradu());
+      try { prekresli(); } catch (e) { /* překreslení nesmí shodit hlídání */ }
+
+      /* Teprve pak znovu načíst, aby se zároveň projevila nová data.
+         Bez sítě se o to nepokoušíme, kiosek by skončil na chybové stránce. */
+      if (navigator.onLine !== false) {
+        setTimeout(function () { location.reload(); }, 2000);
+      }
+    }
+
+    setInterval(zkontroluj, 20000);
+    document.addEventListener("visibilitychange", zkontroluj);
+    window.addEventListener("focus", zkontroluj);
+    window.addEventListener("pageshow", zkontroluj);
   }
 
   return {
@@ -120,6 +137,6 @@ var Deska = (function () {
     dnesIso: dnesIso, dnesCesky: dnesCesky, esc: esc,
     vyveseneDnes: vyveseneDnes, poradi: poradi,
     kategorie: kategorie, znackaPuvodu: znackaPuvodu, najdi: najdi,
-    naplanujObnovu: naplanujObnovu
+    hlidejCas: hlidejCas
   };
 })();
