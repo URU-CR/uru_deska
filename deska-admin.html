@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="cs-CZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Správa úřední desky ÚRÚ ČR</title>
+<style>
+:root {
+  --modra: #2362A2; --modra-tmava: #1C4776; --modra-svetla: #E5EFF8;
+  --text: #2E2E2E; --slaby: #686868; --linka: #D4D4D4; --radek: #F5F7FA;
+  --zluta-p: #FEF3CD; --zluta-r: #FFC107; --zluta-t: #856404;
+  --zelena-p: #E3F5E8; --zelena-r: #4CAF50; --zelena-t: #2E6B3A;
+  --cervena-p: #FDE7E7; --cervena-r: #D32F2F; --cervena-t: #A02020;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-size: 15px; line-height: 1.55; color: var(--text); background: #FAFBFC;
+}
+header { background: var(--modra); color: #fff; padding: 14px 0; }
+.obsah { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+header h1 { margin: 0; font-size: 19px; font-weight: 500; }
+header p { margin: 2px 0 0; font-size: 13px; color: #D6E4F2; }
+
+.krok { background: #fff; border: 1px solid var(--linka); margin: 20px 0; }
+.krok > h2 {
+  margin: 0; padding: 12px 18px; font-size: 16px; font-weight: 500;
+  background: var(--radek); border-bottom: 1px solid var(--linka); color: var(--modra-tmava);
+}
+.krok > h2 .cislo {
+  display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center;
+  background: var(--modra); color: #fff; border-radius: 50%; font-size: 13px; margin-right: 10px;
+}
+.telo { padding: 18px; }
+
+label { display: block; font-size: 13px; color: var(--slaby); margin-bottom: 3px; }
+input[type=text], input[type=date], select, textarea {
+  font-family: inherit; font-size: 14px; padding: 7px 9px;
+  border: 1px solid var(--linka); background: #fff; color: var(--text); width: 100%;
+}
+textarea { min-height: 130px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+button {
+  font-family: inherit; font-size: 14px; padding: 8px 16px; cursor: pointer;
+  background: var(--modra); color: #fff; border: 1px solid var(--modra);
+}
+button:hover { background: var(--modra-tmava); }
+button.vedlejsi { background: #fff; color: var(--modra); }
+button.vedlejsi:hover { background: var(--modra-svetla); }
+button.smazat { background: #fff; color: var(--cervena-t); border-color: var(--cervena-r); padding: 4px 10px; font-size: 13px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.mrizka { display: grid; gap: 12px 16px; }
+.m2 { grid-template-columns: 1fr 1fr; }
+.m3 { grid-template-columns: 1fr 1fr 1fr; }
+.sirka2 { grid-column: span 2; }
+
+.hlaska { padding: 10px 14px; margin: 12px 0; font-size: 14px; border: 1px solid; }
+.ok    { background: var(--zelena-p);  border-color: var(--zelena-r);  color: var(--zelena-t); }
+.varuj { background: var(--zluta-p);   border-color: var(--zluta-r);   color: var(--zluta-t); }
+.chyba { background: var(--cervena-p); border-color: var(--cervena-r); color: var(--cervena-t); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 500; background: var(--modra); color: #fff; padding: 8px 10px; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--linka); vertical-align: top; }
+tbody tr:nth-child(even) td { background: var(--radek); }
+.stitek {
+  display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 2px;
+  border: 1px solid var(--modra); background: var(--modra-svetla); color: var(--modra-tmava);
+}
+.stitek.sejmuto { border-color: var(--slaby); background: #EEE; color: var(--slaby); }
+.napoveda { font-size: 13px; color: var(--slaby); margin: 0 0 14px; }
+.akce { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+.souhrn { font-size: 14px; margin: 0 0 12px; }
+.souhrn strong { color: var(--modra-tmava); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="obsah">
+    <h1>Správa úřední desky ÚRÚ ČR</h1>
+    <p>Lokální nástroj — data neopouštějí tento počítač. Výstupem je soubor <code>data.js</code> k nahrání na web.</p>
+  </div>
+</header>
+
+<div class="obsah">
+
+  <!-- KROK 1 -->
+  <section class="krok">
+    <h2><span class="cislo">1</span>Načtení úřední desky DESÚ</h2>
+    <div class="telo">
+      <p class="napoveda">
+        Otevři <strong><code>https://espis.desu.gov.cz/eDeska/eDeskaAktualni.jsp</code></strong>
+        — tedy přímo výpis, ne adresu <code>/eDeska/</code>, která je jen rám stránky.
+        Nastav <strong>100 záznamů na stránku</strong> a v konzoli prohlížeče (Safari ⌥⌘C,
+        nejdřív napsat <code>allow pasting</code>) spusť
+        <code>copy(document.documentElement.outerHTML)</code>. Obsah schránky vlož sem.
+      </p>
+      <textarea id="vstupHtml" placeholder="Sem vlož zkopírovaný HTML kód úřední desky DESÚ…"></textarea>
+      <div class="akce">
+        <button id="btnNacti">Načíst záznamy</button>
+        <button class="vedlejsi" id="btnNactiSoubor">Načíst ze souboru…</button>
+        <input type="file" id="souborHtml" accept=".html,.htm,.txt" hidden>
+      </div>
+      <div id="hlaskaImport"></div>
+    </div>
+  </section>
+
+  <!-- KROK 2 -->
+  <section class="krok">
+    <h2><span class="cislo">2</span>Ruční přidání dokumentu</h2>
+    <div class="telo">
+      <p class="napoveda">
+        Pro dokumenty převzaté od útvarů MMR, MD a MPO. Jako datum vyvěšení se uvádí
+        <strong>původní datum z desky mateřského úřadu</strong> — jde o pokračování vyvěšení, ne o nové.
+      </p>
+      <div class="mrizka m3">
+        <div>
+          <label for="fPuvod">Původní úřad</label>
+          <select id="fPuvod">
+            <option>MMR</option><option>MD</option><option>MPO</option><option>DESÚ</option>
+          </select>
+        </div>
+        <div>
+          <label for="fKategorie">Kategorie</label>
+          <select id="fKategorie">
+            <option>Správní řízení</option>
+            <option>Opatření obecné povahy</option>
+            <option>Informace podle zákona č. 106/1999 Sb.</option>
+          </select>
+        </div>
+        <div>
+          <label for="fZnacka">Číslo jednací</label>
+          <input type="text" id="fZnacka" placeholder="např. MMR-12345/2026">
+        </div>
+        <div class="sirka2">
+          <label for="fNazev">Název</label>
+          <input type="text" id="fNazev" placeholder="Stručný název vyvěšení">
+        </div>
+        <div>
+          <label for="fOblast">Oblast <span style="font-weight:400">(nepovinné)</span></label>
+          <input type="text" id="fOblast">
+        </div>
+        <div>
+          <label for="fOd">Vyvěšeno dne (původní deska)</label>
+          <input type="date" id="fOd">
+        </div>
+        <div>
+          <label for="fDo">Má být vyvěšeno do</label>
+          <input type="date" id="fDo">
+        </div>
+        <div>
+          <label for="fPrevzato">Převzato ÚRÚ dne</label>
+          <input type="date" id="fPrevzato" value="2027-01-01">
+        </div>
+        <div class="sirka2">
+          <label for="fPuvodce">Původce</label>
+          <input type="text" id="fPuvodce" placeholder="např. Ministerstvo pro místní rozvoj, Staroměstské nám. 6, 110 15 Praha 1">
+        </div>
+        <div>
+          <label for="fSoubor">Dokument (PDF)</label>
+          <input type="file" id="fSoubor" accept="application/pdf" multiple>
+        </div>
+      </div>
+      <div class="akce">
+        <button id="btnPridej">Přidat na desku</button>
+        <button class="vedlejsi" id="btnVycisti">Vyčistit formulář</button>
+      </div>
+      <div id="hlaskaForm"></div>
+    </div>
+  </section>
+
+  <!-- KROK 3 -->
+  <section class="krok">
+    <h2><span class="cislo">3</span>Obsah desky</h2>
+    <div class="telo">
+      <p class="souhrn" id="souhrn">Zatím nejsou načteny žádné záznamy.</p>
+      <div id="kontrola"></div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:11%">Původ</th>
+            <th style="width:32%">Název</th>
+            <th style="width:16%">Číslo jednací</th>
+            <th style="width:10%">Vyvěšeno</th>
+            <th style="width:10%">Do</th>
+            <th style="width:13%">Přílohy</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody id="seznam"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- KROK 4 -->
+  <section class="krok">
+    <h2><span class="cislo">4</span>Export na web</h2>
+    <div class="telo">
+      <p class="napoveda">
+        Stáhni <code>data.js</code> a nahraj ho do kořene webu. Přílohy patří do složky
+        <code>prilohy/</code> pod přesně těmi názvy, které jsou v kontrolním seznamu.
+      </p>
+      <div>
+        <label for="fUpozorneni">Text upozornění na desce <span style="font-weight:400">(prázdné = nezobrazí se)</span></label>
+        <input type="text" id="fUpozorneni" placeholder="např. Úřední deska je dočasně provozována ve zjednodušené podobě.">
+      </div>
+      <div class="akce">
+        <button id="btnData">Stáhnout data.js</button>
+        <button class="vedlejsi" id="btnPrilohy">Stáhnout všechny přílohy z desky</button>
+        <button class="vedlejsi" id="btnCsv">Stáhnout kontrolní seznam příloh (CSV)</button>
+        <button class="vedlejsi" id="btnZaloha">Stáhnout zálohu (JSON)</button>
+        <button class="vedlejsi" id="btnObnov">Obnovit ze zálohy…</button>
+        <input type="file" id="souborZaloha" accept=".json" hidden>
+      </div>
+      <div id="hlaskaExport"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+"use strict";
+
+var KLIC = "uru-deska-v1";
+var zaznamy = [];
+var poradiRucnich = 0;
+
+/* ---------------------------------------------------------- pomocné */
+
+function $(id) { return document.getElementById(id); }
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function hlaska(kam, typ, text) {
+  $(kam).innerHTML = '<div class="hlaska ' + typ + '">' + text + '</div>';
+}
+
+function iso2cz(iso) {
+  if (!iso) return "";
+  var c = iso.split("-");
+  return c[2] + "." + c[1] + "." + c[0];
+}
+
+function cz2iso(cz) {
+  if (!cz) return "";
+  var c = cz.replace(/\s/g, "").split(".");
+  if (c.length !== 3) return "";
+  return c[2] + "-" + ("0" + c[1]).slice(-2) + "-" + ("0" + c[0]).slice(-2);
+}
+
+function dnesIso() {
+  var d = new Date();
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+
+function stahni(nazev, obsah, typ) {
+  var b = new Blob([obsah], { type: (typ || "text/plain") + ";charset=utf-8" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = nazev;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+function kb(bytes) {
+  if (!bytes && bytes !== 0) return "";
+  return (bytes / 1024).toFixed(1).replace(".", ",") + " kB";
+}
+
+/* ---------------------------------------------- parser desky DESÚ */
+
+function parsuj(html) {
+  var doc = new DOMParser().parseFromString(html, "text/html");
+
+  /* Adresa /eDeska/ je frameset — výpis je až ve vnořené stránce. */
+  if (doc.querySelector("frameset, frame")) {
+    throw new Error(
+      "Zkopíroval jsi rám stránky, ne výpis. Úřední deska je frameset a seznam " +
+      "záznamů je až uvnitř.<br><br>Buď otevři přímo " +
+      "<code>https://espis.desu.gov.cz/eDeska/eDeskaAktualni.jsp</code> a zkopíruj HTML tam, " +
+      "nebo na stránce s deskou spusť v konzoli:<br>" +
+      "<code>copy(document.getElementById('mainFrame').contentDocument.documentElement.outerHTML)</code>");
+  }
+
+  var odkazy = doc.querySelectorAll('a[href*="eDeskaDetail"]');
+  if (!odkazy.length) {
+    throw new Error("Ve vloženém textu není výpis úřední desky — nenašel jsem žádný odkaz na detail vyvěšení.");
+  }
+
+  /* Kontrola úplnosti: stránkování má tvar „1 - 54 z 54“. */
+  var strank = (doc.body.textContent || "").match(/(\d+)\s*-\s*(\d+)\s*z\s*(\d+)/);
+  if (strank && strank[2] !== strank[3]) {
+    throw new Error("Vložený výpis obsahuje jen " + strank[2] + " z " + strank[3] +
+      " záznamů. Na stránce přepni počet záznamů na stránku na 100 a zkopíruj HTML znovu.");
+  }
+
+  /* Sloupce se hledají podle tříd; když je šablona nemá, použije se pořadí. */
+  function bunka(radek, trida, poradi) {
+    var t = radek.querySelector("td." + trida);
+    if (t) return t;
+    return radek.cells && radek.cells.length > poradi ? radek.cells[poradi] : null;
+  }
+  function text(uzel) { return uzel ? uzel.textContent.replace(/\s+/g, " ").trim() : ""; }
+
+  var vysledek = [], videno = {};
+
+  Array.prototype.forEach.call(odkazy, function (a) {
+    var id = (a.getAttribute("href") || "").match(/detailId=(\d+)/);
+    if (!id) return;
+    id = id[1];
+    if (videno[id]) return;
+    videno[id] = 1;
+
+    var radek = a.closest("tr");
+    if (!radek) return;
+
+    var datumy = [];
+    Array.prototype.forEach.call(radek.querySelectorAll("td.edeska-sloupec-zverejnit"), function (t) {
+      var d = text(t).match(/\d{2}\.\d{2}\.\d{4}/);
+      if (d) datumy.push(d[0]);
+    });
+    if (datumy.length < 2) {
+      /* Záloha pro šablonu bez tříd: vezmou se data v pořadí výskytu v řádku. */
+      datumy = (text(radek).match(/\d{2}\.\d{2}\.\d{4}/g) || []);
+    }
+
+    var prilohy = [];
+    Array.prototype.forEach.call(radek.querySelectorAll('a[href*="idPriloha"]'), function (p) {
+      var pid = (p.getAttribute("href") || "").match(/idPriloha=(\d+)/);
+      if (!pid) return;
+      var nazev = text(p);
+      /* Velikost stojí jako holý text hned za odkazem, v závorce. */
+      var vel = "", uzel = p.nextSibling;
+      while (uzel && uzel.nodeType === 3) {
+        var m = uzel.textContent.match(/\(([^)]+)\)/);
+        if (m) { vel = m[1].trim(); break; }
+        uzel = uzel.nextSibling;
+      }
+      prilohy.push({
+        nazev: nazev, velikost: vel, soubor: nazev,
+        zdroj: "https://espis.desu.gov.cz/eDeska/download.jsp?idPriloha=" + pid[1]
+      });
+    });
+
+    vysledek.push({
+      id: id,
+      puvod: "DESÚ",
+      kategorie: text(bunka(radek, "edeska-sloupec-kategorie", 0)),
+      nazev: text(a),
+      znacka: text(bunka(radek, "edeska-sloupec-znacka", 2)),
+      od: datumy[0] || "", do: datumy[1] || "",
+      odIso: cz2iso(datumy[0] || ""), doIso: cz2iso(datumy[1] || ""),
+      oblast: "",
+      puvodce: "DESU  Nábřeží Ludvíka Svobody 1222/12, 110 00 Praha 1",
+      adresat: "Úřad rozvoje území České republiky, Úřední deska, IČO: 24858234",
+      internetOd: datumy[0] || "",
+      prilohy: prilohy
+    });
+  });
+
+  if (!vysledek.length) throw new Error("V tabulce se nepodařilo přečíst žádný záznam.");
+  return vysledek;
+}
+
+/* Stejný název souboru u více vyvěšení:
+   - shodná velikost → jde o tentýž dokument, oba odkazy míří na jeden soubor
+   - odlišná velikost → jsou to různé dokumenty, názvy se odliší prefixem s ID */
+function srovnejNazvy(vsechny) {
+  var podleNazvu = {};
+  vsechny.forEach(function (z) {
+    z.prilohy.forEach(function (p) {
+      var zaklad = p.nazev;
+      (podleNazvu[zaklad] = podleNazvu[zaklad] || []).push(p);
+    });
+  });
+  var prejmenovane = [];
+  Object.keys(podleNazvu).forEach(function (nazev) {
+    var skupina = podleNazvu[nazev];
+    var ids = {}, velikosti = {};
+    skupina.forEach(function (p) {
+      var id = (p.zdroj || "").match(/idPriloha=(\d+)/);
+      p._id = id ? id[1] : "";
+      ids[p._id] = 1;
+      velikosti[p.velikost] = 1;
+    });
+    if (Object.keys(ids).length < 2) return;          // tentýž soubor vícekrát
+    if (Object.keys(velikosti).length < 2) {          // různá ID, stejná velikost
+      skupina.forEach(function (p) { p.soubor = nazev; });
+      return;
+    }
+    skupina.forEach(function (p) {                    // různá ID i velikost
+      if (p._id) {
+        p.soubor = p._id + "-" + nazev;
+        prejmenovane.push({ puvodni: nazev, novy: p.soubor, velikost: p.velikost });
+      }
+    });
+  });
+  return prejmenovane;
+}
+
+function odEntit(s) {
+  var d = document.createElement("textarea");
+  d.innerHTML = s;
+  return d.value.trim();
+}
+
+/* ------------------------------------------------------- vykreslení */
+
+function vykresli() {
+  var telo = $("seznam");
+  if (!zaznamy.length) {
+    telo.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#686868;padding:24px">Zatím nic.</td></tr>';
+    $("souhrn").textContent = "Zatím nejsou načteny žádné záznamy.";
+    $("kontrola").innerHTML = "";
+    return;
+  }
+
+  var dnes = dnesIso();
+  zaznamy.sort(function (a, b) {
+    return (b.odIso || "").localeCompare(a.odIso || "") || (a.znacka || "").localeCompare(b.znacka || "");
+  });
+
+  telo.innerHTML = zaznamy.map(function (z, i) {
+    var sejmuto = z.doIso && z.doIso < dnes;
+    return '<tr>' +
+      '<td><span class="stitek' + (sejmuto ? ' sejmuto' : '') + '">' + esc(z.puvod) + '</span></td>' +
+      '<td>' + esc(z.nazev) + '</td>' +
+      '<td>' + esc(z.znacka) + '</td>' +
+      '<td>' + esc(z.od) + '</td>' +
+      '<td>' + esc(z.do) + '</td>' +
+      '<td>' + (z.prilohy.length ? z.prilohy.map(function (p) { return esc(p.nazev); }).join("<br>") : "—") + '</td>' +
+      '<td><button class="smazat" data-i="' + i + '">Odebrat</button></td>' +
+    '</tr>';
+  }).join("");
+
+  Array.prototype.forEach.call(telo.querySelectorAll(".smazat"), function (b) {
+    b.addEventListener("click", function () {
+      var z = zaznamy[+b.dataset.i];
+      if (confirm("Odebrat z desky?\n\n" + z.znacka + "\n" + z.nazev)) {
+        zaznamy.splice(+b.dataset.i, 1);
+        uloz(); vykresli();
+      }
+    });
+  });
+
+  var zDesu = zaznamy.filter(function (z) { return z.puvod === "DESÚ"; }).length;
+  var pocetPriloh = zaznamy.reduce(function (s, z) { return s + z.prilohy.length; }, 0);
+  $("souhrn").innerHTML =
+    "Celkem <strong>" + zaznamy.length + "</strong> záznamů (z toho " + zDesu +
+    " z desky DESÚ, " + (zaznamy.length - zDesu) + " převzatých) a <strong>" + pocetPriloh + "</strong> příloh.";
+
+  zkontroluj();
+}
+
+/* --------------------------------------------------------- kontroly */
+
+function zkontroluj() {
+  var potize = [];
+  var nazvySouboru = {};
+  var shodneNazvy = {};
+
+  zaznamy.forEach(function (z) {
+    if (!z.znacka) potize.push("Záznam „" + z.nazev + "“ nemá číslo jednací.");
+    if (!z.odIso) potize.push(z.znacka + ": chybí datum vyvěšení.");
+    if (!z.doIso) potize.push(z.znacka + ": chybí datum, do kdy má být vyvěšeno.");
+    if (z.odIso && z.doIso && z.doIso < z.odIso)
+      potize.push(z.znacka + ": datum sejmutí je dříve než datum vyvěšení.");
+    if (!z.prilohy.length)
+      potize.push(z.znacka + ": k vyvěšení není připojen žádný dokument.");
+    z.prilohy.forEach(function (p) {
+      if (nazvySouboru[p.soubor]) shodneNazvy[p.soubor] = 1;
+      nazvySouboru[p.soubor] = 1;
+    });
+  });
+
+  /* Dokumenty, kterým doba vyvěšení uplyne dříve, než se čeká obnovení ESPISu. */
+  var hranice = "2027-01-31";
+  var brzy = zaznamy.filter(function (z) { return z.doIso && z.doIso <= hranice; }).length;
+
+  var html = "";
+  if (potize.length) {
+    html += '<div class="hlaska varuj"><strong>Ke kontrole:</strong><br>' +
+            potize.slice(0, 12).map(esc).join("<br>") +
+            (potize.length > 12 ? "<br>… a dalších " + (potize.length - 12) : "") + '</div>';
+  } else {
+    html += '<div class="hlaska ok">Všechny záznamy mají vyplněná povinná pole i dokumenty.</div>';
+  }
+  var prej = window.POSLEDNI_PREJMENOVANI || [];
+  if (prej.length) {
+    html += '<div class="hlaska varuj"><strong>Různé dokumenty se stejným názvem — přejmenuj je:</strong><br>' +
+      prej.map(function (p) {
+        return 'soubor o velikosti ' + esc(p.velikost) + ' přejmenuj z <code>' +
+               esc(p.puvodni) + '</code> na <code>' + esc(p.novy) + '</code>';
+      }).join("<br>") + '</div>';
+  }
+  var shodne = Object.keys(shodneNazvy).filter(function (n) {
+    return !prej.some(function (p) { return p.novy === n; });
+  });
+  if (shodne.length) {
+    html += '<div class="hlaska ok"><strong>Dvojí výskyt téhož dokumentu:</strong> ' +
+            shodne.map(esc).join(", ") +
+            '. Mají shodnou velikost, jde tedy o tentýž soubor u dvou vyvěšení. ' +
+            'Ve složce Stahování smaž kopie, které Safari pojmenoval s příponou ' +
+            '<code>-2</code>, a ponech jednu.</div>';
+  }
+  if (brzy) {
+    html += '<div class="hlaska varuj">' + brzy + ' dokumentům uplyne doba vyvěšení do 31. 1. 2027. ' +
+            'Ze statické desky zmizí samy v den sejmutí, ale po obnovení ESPISu je potřeba ' +
+            'ověřit, že mají ve spisové službě zapsané správné datum sejmutí.</div>';
+  }
+  $("kontrola").innerHTML = html;
+}
+
+/* ----------------------------------------------------------- uložení */
+
+function uloz() {
+  try { localStorage.setItem(KLIC, JSON.stringify({ zaznamy: zaznamy, poradi: poradiRucnich })); }
+  catch (e) { /* soukromé okno nebo plná kvóta — práce pokračuje, jen se neobnoví */ }
+}
+
+function nacti() {
+  try {
+    var s = localStorage.getItem(KLIC);
+    if (!s) return;
+    var d = JSON.parse(s);
+    zaznamy = d.zaznamy || [];
+    poradiRucnich = d.poradi || 0;
+  } catch (e) { zaznamy = []; }
+}
+
+/* ------------------------------------------------------------ export */
+
+function vyrobData() {
+  var cista = zaznamy.map(function (z) {
+    return {
+      id: z.id, puvod: z.puvod, kategorie: z.kategorie, nazev: z.nazev, znacka: z.znacka,
+      od: z.od, do: z.do, odIso: z.odIso, doIso: z.doIso,
+      oblast: z.oblast, puvodce: z.puvodce, adresat: z.adresat,
+      internetOd: z.internetOd, prevzatoDne: z.prevzatoDne || "",
+      prilohy: z.prilohy.map(function (p) {
+        return { nazev: p.nazev, velikost: p.velikost, soubor: p.soubor };
+      })
+    };
+  });
+  var up = $("fUpozorneni").value.trim();
+  return "/* Úřední deska ÚRÚ ČR — data vygenerovaná " + iso2cz(dnesIso()) + " */\n" +
+         "window.EDESKA = " + JSON.stringify(cista, null, 1) + ";\n" +
+         "window.EDESKA_UPOZORNENI = " + JSON.stringify(up) + ";\n";
+}
+
+function vyrobCsv() {
+  var r = ["puvod;cislo_jednaci;ulozit_jako;velikost;zdrojova_adresa"];
+  zaznamy.forEach(function (z) {
+    z.prilohy.forEach(function (p) {
+      r.push([z.puvod, z.znacka, p.soubor, p.velikost, p.zdroj || "(ruční vstup)"].join(";"));
+    });
+  });
+  return "﻿" + r.join("\n") + "\n";
+}
+
+/* ------------------------------------------------------------ obsluha */
+
+$("btnNacti").addEventListener("click", function () {
+  var html = $("vstupHtml").value;
+  if (!html.trim()) { hlaska("hlaskaImport", "chyba", "Vlož nejprve zkopírovaný kód stránky."); return; }
+  try {
+    var nove = parsuj(html);
+    var mam = {};
+    zaznamy.forEach(function (z) { mam[z.id] = 1; });
+    var pridano = 0, aktualizovano = 0;
+    nove.forEach(function (n) {
+      if (mam[n.id]) {
+        for (var i = 0; i < zaznamy.length; i++) {
+          if (zaznamy[i].id === n.id) { zaznamy[i] = n; aktualizovano++; break; }
+        }
+      } else { zaznamy.push(n); pridano++; }
+    });
+    window.POSLEDNI_PREJMENOVANI = srovnejNazvy(zaznamy);
+    uloz(); vykresli();
+    hlaska("hlaskaImport", "ok", "Načteno <strong>" + nove.length + "</strong> záznamů z desky DESÚ — " +
+      pridano + " nových, " + aktualizovano + " aktualizovaných. " +
+      "Ručně přidané dokumenty zůstaly zachovány.");
+    $("vstupHtml").value = "";
+  } catch (e) {
+    hlaska("hlaskaImport", "chyba", esc(e.message));
+  }
+});
+
+$("btnNactiSoubor").addEventListener("click", function () { $("souborHtml").click(); });
+$("souborHtml").addEventListener("change", function (ev) {
+  var f = ev.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function () { $("vstupHtml").value = r.result; $("btnNacti").click(); };
+  r.readAsText(f, "utf-8");
+  ev.target.value = "";
+});
+
+$("btnPridej").addEventListener("click", function () {
+  var nazev = $("fNazev").value.trim();
+  var znacka = $("fZnacka").value.trim();
+  var od = $("fOd").value, doD = $("fDo").value;
+
+  var chybi = [];
+  if (!nazev) chybi.push("název");
+  if (!znacka) chybi.push("číslo jednací");
+  if (!od) chybi.push("datum vyvěšení");
+  if (!doD) chybi.push("datum, do kdy má být vyvěšeno");
+  if (chybi.length) {
+    hlaska("hlaskaForm", "chyba", "Chybí: " + chybi.join(", ") + ".");
+    return;
+  }
+  if (doD < od) {
+    hlaska("hlaskaForm", "chyba", "Datum sejmutí nemůže být dříve než datum vyvěšení.");
+    return;
+  }
+
+  poradiRucnich++;
+  var soubory = $("fSoubor").files;
+  var prilohy = [];
+  for (var i = 0; i < soubory.length; i++) {
+    prilohy.push({ nazev: soubory[i].name, velikost: kb(soubory[i].size), soubor: soubory[i].name });
+  }
+
+  zaznamy.push({
+    id: "r" + poradiRucnich,
+    puvod: $("fPuvod").value,
+    kategorie: $("fKategorie").value,
+    nazev: nazev, znacka: znacka,
+    od: iso2cz(od), do: iso2cz(doD), odIso: od, doIso: doD,
+    oblast: $("fOblast").value.trim(),
+    puvodce: $("fPuvodce").value.trim(),
+    adresat: "Úřad rozvoje území České republiky, Úřední deska, IČO: 24858234",
+    internetOd: iso2cz(od),
+    prevzatoDne: iso2cz($("fPrevzato").value),
+    prilohy: prilohy
+  });
+
+  uloz(); vykresli();
+  hlaska("hlaskaForm", "ok", "Přidáno. Nezapomeň zkopírovat " +
+    (prilohy.length ? "soubor" + (prilohy.length > 1 ? "y" : "") + " <strong>" +
+      prilohy.map(function (p) { return esc(p.soubor); }).join("</strong>, <strong>") + "</strong>" : "dokument") +
+    " do složky <code>prilohy/</code>.");
+  vycisti();
+});
+
+function vycisti() {
+  ["fZnacka", "fNazev", "fOblast", "fPuvodce"].forEach(function (id) { $(id).value = ""; });
+  $("fOd").value = ""; $("fDo").value = ""; $("fSoubor").value = "";
+}
+$("btnVycisti").addEventListener("click", function () { vycisti(); $("hlaskaForm").innerHTML = ""; });
+
+$("btnData").addEventListener("click", function () {
+  if (!zaznamy.length) { hlaska("hlaskaExport", "chyba", "Deska je prázdná, není co exportovat."); return; }
+  stahni("data.js", vyrobData(), "application/javascript");
+  hlaska("hlaskaExport", "ok", "Soubor <code>data.js</code> stažen. Nahraj ho do kořene webu — nic jiného se nemění.");
+});
+
+$("btnPrilohy").addEventListener("click", function () {
+  var ke = [];
+  var mam = {};
+  zaznamy.forEach(function (z) {
+    z.prilohy.forEach(function (p) {
+      if (p.zdroj && !mam[p.soubor]) { mam[p.soubor] = 1; ke.push(p); }
+    });
+  });
+  if (!ke.length) {
+    hlaska("hlaskaExport", "chyba", "Žádná příloha nemá zdrojovou adresu — ručně vložené dokumenty se stahovat nemusí.");
+    return;
+  }
+  hlaska("hlaskaExport", "varuj", "Spouštím stahování " + ke.length + " příloh. " +
+    "Prohlížeč se nejspíš jednou zeptá, jestli povolit stahování více souborů — povol to. " +
+    "Soubory přistanou ve složce Stahování, odtud je přesuň do <code>web/prilohy/</code>.");
+
+  /* Stahuje se po jednom s prodlevou — prohlížeč jinak část požadavků zahodí. */
+  var i = 0;
+  (function dalsi() {
+    if (i >= ke.length) {
+      hlaska("hlaskaExport", "ok", "Odesláno " + ke.length + " požadavků na stažení. " +
+        "Ve složce Stahování zkontroluj, že máš všech " + ke.length + " souborů, " +
+        "a porovnej je s kontrolním seznamem CSV.");
+      return;
+    }
+    var a = document.createElement("a");
+    a.href = ke[i].zdroj;
+    a.download = ke[i].soubor;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    i++;
+    setTimeout(dalsi, 400);
+  })();
+});
+
+$("btnCsv").addEventListener("click", function () {
+  stahni("prilohy-ke-stazeni.csv", vyrobCsv(), "text/csv");
+});
+
+$("btnZaloha").addEventListener("click", function () {
+  stahni("deska-zaloha-" + dnesIso() + ".json",
+    JSON.stringify({ zaznamy: zaznamy, poradi: poradiRucnich }, null, 1), "application/json");
+});
+
+$("btnObnov").addEventListener("click", function () { $("souborZaloha").click(); });
+$("souborZaloha").addEventListener("change", function (ev) {
+  var f = ev.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function () {
+    try {
+      var d = JSON.parse(r.result);
+      if (!d.zaznamy) throw new Error("Soubor neobsahuje zálohu desky.");
+      zaznamy = d.zaznamy; poradiRucnich = d.poradi || 0;
+      uloz(); vykresli();
+      hlaska("hlaskaExport", "ok", "Záloha obnovena — " + zaznamy.length + " záznamů.");
+    } catch (e) { hlaska("hlaskaExport", "chyba", esc(e.message)); }
+  };
+  r.readAsText(f, "utf-8");
+  ev.target.value = "";
+});
+
+nacti();
+vykresli();
+})();
+</script>
+</body>
+</html>
