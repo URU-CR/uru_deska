@@ -33,6 +33,7 @@
 </header>
 
 <main class="obsah">
+  <a class="zpet" id="zpet" href="https://www.uru.gov.cz/">← Zpět na web úřadu</a>
   <h1>Úřední deska</h1>
   <p class="podtitulek" id="stav"></p>
 
@@ -126,6 +127,7 @@
 
   function obnovHlavicku() {
     document.getElementById("paticka").textContent = Deska.urad().adresa;
+    document.getElementById("zpet").href = Deska.urad().odkaz;
     document.title = "Úřední deska — " + Deska.urad().nazev;
     document.getElementById("stav").textContent = "Stav ke dni " + Deska.dnesCesky();
     var vybrano = poleKat.value;
