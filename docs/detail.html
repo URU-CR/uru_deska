@@ -5,10 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Detail vyvěšení — Úřední deska ÚRÚ ČR</title>
 <link rel="stylesheet" href="css/deska.css">
+<script src="data.js"></script>
+<script src="js/deska.js"></script>
+<script>document.documentElement.setAttribute("data-urad", Deska.klicUradu());</script>
 </head>
 <body>
 
-<header class="hlavicka">
+<header class="hlavicka hlavicka--desu">
+  <div class="obsah">
+    <a class="hlavicka__odkaz" href="https://www.desu.gov.cz/">
+      <img class="hlavicka__znak" src="znak.svg" width="56" height="56" alt="Státní znak České republiky">
+      <span class="hlavicka__texty">
+        <span class="hlavicka__nazev">Dopravní a energetický stavební úřad</span>
+        <span class="hlavicka__podnazev">Úřední deska</span>
+      </span>
+    </a>
+  </div>
+</header>
+
+<header class="hlavicka hlavicka--uru">
   <div class="obsah">
     <a class="hlavicka__odkaz" href="https://www.uru.gov.cz/">
       <img class="hlavicka__logo" src="logo-uru.svg" width="183" height="80"
@@ -23,17 +38,20 @@
 </main>
 
 <footer class="paticka">
-  <div class="obsah">
-    Úřad rozvoje území České republiky · nábřeží Ludvíka Svobody 1222/12, 110 00 Praha 1
-  </div>
+  <div class="obsah" id="paticka"></div>
 </footer>
 
-<script src="data.js"></script>
-<script src="js/deska.js"></script>
 <script>
 (function () {
+  document.getElementById("paticka").textContent = Deska.urad().adresa;
+  Deska.naplanujObnovu();
+
   var id = new URLSearchParams(location.search).get("id");
-  var z = Deska.najdi(window.EDESKA || [], id);
+  /* Převzatá vyvěšení nejsou do okamžiku přechodu součástí desky. */
+  var dostupne = (window.EDESKA || []).filter(function (x) {
+    return Deska.jePoPrechodu() || !x.puvod || x.puvod === "DESÚ";
+  });
+  var z = Deska.najdi(dostupne, id);
   var telo = document.getElementById("telo");
   var e = Deska.esc;
 
@@ -44,7 +62,7 @@
     return;
   }
 
-  document.title = z.znacka + " — Úřední deska ÚRÚ ČR";
+  document.title = z.znacka + " — Úřední deska " + Deska.urad().nazev;
 
   var radek = function (popis, hodnota) {
     return '<tr><th scope="row">' + e(popis) + '</th><td>' + (hodnota || "—") + '</td></tr>';
@@ -84,7 +102,7 @@
       radek("Název", e(z.nazev)) +
       radek("Číslo jednací", e(z.znacka)) +
       radek("Původce", e(z.puvodce)) +
-      radek("Adresát", e(z.adresat)) +
+      radek("Adresát", e(Deska.urad().adresat)) +
       radek("Stav", stav) +
     '</table>' +
 

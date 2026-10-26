@@ -43,13 +43,47 @@ body {
 
 /* ---------- Hlavička ---------- */
 
-/* Logo úřadu nese název i znak, hlavička proto zůstává bílá — na modrém
-   podkladu by logo nefungovalo. Modrá linka dole odděluje hlavičku od obsahu. */
-.hlavicka {
+/* Deska má dvě podoby hlavičky. Do okamžiku přechodu vystupuje jako deska
+   DESÚ (modrý pruh se státním znakem), poté jako deska ÚRÚ ČR (bílý pruh
+   s logem). Přepíná atribut data-urad na <html>, který nastaví skript
+   v hlavičce dokumentu ještě před vykreslením stránky.
+   Bez JavaScriptu se nezobrazí ani jedna — stránka ho potřebuje tak jako tak. */
+.hlavicka { display: none; }
+[data-urad="desu"] .hlavicka--desu,
+[data-urad="uru"]  .hlavicka--uru { display: block; }
+
+/* Podoba ÚRÚ — logo nese název i znak, hlavička proto zůstává bílá;
+   na modrém podkladu by logo nefungovalo. */
+.hlavicka--uru {
     background: #FFFFFF;
     padding: 18px 0;
     border-bottom: 3px solid var(--uru-modra);
 }
+
+/* Podoba DESÚ — státní znak je bílý, potřebuje tmavý podklad. */
+.hlavicka--desu {
+    background: var(--uru-modra);
+    padding: 16px 0;
+}
+.hlavicka--desu .hlavicka__odkaz { color: #FFFFFF; }
+.hlavicka__znak {
+    width: 56px;
+    height: 56px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 18px;
+}
+.hlavicka__texty { display: inline-block; vertical-align: middle; }
+.hlavicka__nazev {
+    display: block;
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #FFFFFF;
+}
+.hlavicka__podnazev { display: block; font-size: 14px; color: #D6E4F2; }
+.hlavicka--desu .hlavicka__odkaz:hover .hlavicka__nazev { text-decoration: underline; }
+.hlavicka--desu .hlavicka__odkaz:focus { outline: 2px solid #FFFFFF; outline-offset: 3px; }
 .hlavicka__odkaz {
     display: inline-block;
     text-decoration: none;
@@ -221,8 +255,12 @@ ul.prilohy li { margin-bottom: 4px; font-size: 14px; }
 /* ---------- Malé displeje a kiosek na výšku ---------- */
 
 @media (max-width: 760px) {
-    .hlavicka { padding: 12px 0; border-bottom-width: 2px; }
+    .hlavicka--uru { padding: 12px 0; border-bottom-width: 2px; }
+    .hlavicka--desu { padding: 10px 0; }
     .hlavicka__logo { width: 138px; height: 60px; }
+    .hlavicka__znak { width: 42px; height: 42px; margin-right: 12px; }
+    .hlavicka__nazev { font-size: 16px; }
+    .hlavicka__podnazev { font-size: 12px; }
     h1 { font-size: 24px; }
     table.vypis { font-size: 13px; }
     table.vypis th:nth-child(1),

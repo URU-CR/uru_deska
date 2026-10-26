@@ -10,7 +10,8 @@ docs/                ← obsah, který se nahrává na web
   data.js              ← JEDINÝ soubor, který se při aktualizaci mění
   js/deska.js          datumová logika vyvěšení a sejmutí
   css/deska.css        ← veškerý vzhled; po dodání návrhu se mění jen tady
-  logo-uru.svg
+  logo-uru.svg         logo ÚRÚ (podoba desky po přechodu)
+  znak.svg             státní znak (podoba desky do přechodu)
   prilohy/             sem patří PDF dokumenty
 ```
 
@@ -57,6 +58,26 @@ mateřského úřadu** — jde o pokračování vyvěšení, ne o nové. PDF zko
 
 Krok 4 → *Stáhnout data.js* → nahradit soubor `docs/data.js` → nahrát na web.
 Nic jiného se nemění.
+
+## Dvě podoby desky
+
+Deska se sama přepne v okamžiku, který nastavíš v kroku 4 administrace
+(výchozí 1. 1. 2027, 00:00):
+
+| | do přechodu | od přechodu |
+|---|---|---|
+| hlavička | modrý pruh, státní znak, DESÚ | bílý pruh, logo ÚRÚ |
+| převzatá vyvěšení (MMR, MD, MPO) | skrytá | zobrazená |
+| adresát v detailu, patička | DESÚ | ÚRÚ ČR |
+
+Lze ji proto nasadit **kdykoli předem** — do nastaveného času se tváří jako
+deska DESÚ. Pro vyzkoušení podoby ÚRÚ posuň čas do minulosti, pro podobu
+DESÚ do budoucna; náhled pod poli rovnou říká, co deska zrovna zobrazuje.
+
+Stránka se sama obnoví o půlnoci a v okamžik přechodu, takže se přepne
+i na kiosku, kde zůstává otevřená celé dny.
+
+Názvy úřadů a adresy v patičce jsou v `js/deska.js` na začátku, v `URADY`.
 
 ## Co si hlídat
 

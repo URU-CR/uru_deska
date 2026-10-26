@@ -1,18 +1,57 @@
-/* Sdílená logika úřední desky ÚRÚ ČR.
-   Datumová logika vyvěšení a sejmutí běží v prohlížeči, protože obsah desky
-   se po nasazení už negeneruje znovu — dokumenty musí ze seznamu zmizet samy
-   v den, kdy jim uplyne doba vyvěšení. */
+/* Sdílená logika úřední desky.
+   -------------------------------------------------------------------------
+   Deska má dvě období. Do okamžiku přechodu (window.EDESKA_PRECHOD) vystupuje
+   jako deska DESÚ a zobrazuje jen jeho vlastní vyvěšení; od toho okamžiku
+   vystupuje jako deska ÚRÚ ČR a přidá i vyvěšení převzatá od MMR, MD a MPO.
+   Okamžik přechodu se nastavuje v administraci a zapisuje do data.js.
+
+   Datumová logika běží v prohlížeči, protože obsah desky se po nasazení už
+   negeneruje znovu — dokumenty musí ze seznamu zmizet samy v den, kdy jim
+   uplyne doba vyvěšení. */
 var Deska = (function () {
 
-  function dnesIso() {
-    var d = new Date();
+  /* Obě podoby hlavičky a patičky. Změna názvu nebo adresy se dělá zde. */
+  var URADY = {
+    desu: {
+      nazev: "Dopravní a energetický stavební úřad",
+      odkaz: "https://www.desu.gov.cz/",
+      adresat: "Dopravní a energetický stavební úřad, Úřední deska, IČO: 19139314",
+      adresa: "Dopravní a energetický stavební úřad · nábřeží Ludvíka Svobody 1222/12, 110 00 Praha 1"
+    },
+    uru: {
+      nazev: "Úřad rozvoje území České republiky",
+      odkaz: "https://www.uru.gov.cz/",
+      adresat: "Úřad rozvoje území České republiky, Úřední deska, IČO: 24858234",
+      adresa: "Úřad rozvoje území České republiky · nábřeží Ludvíka Svobody 1222/12, 110 00 Praha 1"
+    }
+  };
+
+  function okamzikPrechodu() {
+    var t = window.EDESKA_PRECHOD;
+    if (!t) return null;
+    /* Zápis bez časové zóny se záměrně čte jako místní čas. */
+    var d = new Date(t);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function jePoPrechodu(kdy) {
+    var p = okamzikPrechodu();
+    if (!p) return true;              // bez nastavení se deska chová jako ÚRÚ
+    return (kdy || new Date()) >= p;
+  }
+
+  function klicUradu(kdy) { return jePoPrechodu(kdy) ? "uru" : "desu"; }
+  function urad(kdy) { return URADY[klicUradu(kdy)]; }
+
+  function dnesIso(kdy) {
+    var d = kdy || new Date();
     return d.getFullYear() + "-" +
       ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
       ("0" + d.getDate()).slice(-2);
   }
 
-  function dnesCesky() {
-    var d = new Date();
+  function dnesCesky(kdy) {
+    var d = kdy || new Date();
     return d.getDate() + ". " + (d.getMonth() + 1) + ". " + d.getFullYear();
   }
 
@@ -22,11 +61,13 @@ var Deska = (function () {
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  /* Dokument je vyvěšen, pokud dnešek spadá do intervalu od–do včetně.
-     Prázdné datum znamená bez omezení na dané straně. */
-  function vyveseneDnes(zaznamy, kIso) {
-    var den = kIso || dnesIso();
+  /* Dokument se zobrazí, pokud dnešek spadá do intervalu od–do včetně
+     a pokud jeho původ odpovídá aktuálnímu období desky. */
+  function vyveseneDnes(zaznamy, kIso, kdy) {
+    var den = kIso || dnesIso(kdy);
+    var prevzataZobrazit = jePoPrechodu(kdy);
     return zaznamy.filter(function (z) {
+      if (!prevzataZobrazit && z.puvod && z.puvod !== "DESÚ") return false;
       return (!z.odIso || z.odIso <= den) && (!z.doIso || z.doIso >= den);
     });
   }
@@ -38,12 +79,12 @@ var Deska = (function () {
 
   function kategorie(zaznamy) {
     var m = {};
-    zaznamy.forEach(function (z) { if (z.kategorie) m[z.kategorie] = 1; });
+    vyveseneDnes(zaznamy).forEach(function (z) { if (z.kategorie) m[z.kategorie] = 1; });
     return Object.keys(m).sort();
   }
 
-  /* Dokumenty převzaté od jiného úřadu se označují, aby bylo zřejmé,
-     že jde o pokračování vyvěšení zahájeného na desce původního úřadu. */
+  /* Převzatá vyvěšení se označují, aby bylo zřejmé, že jde o pokračování
+     vyvěšení zahájeného na desce původního úřadu. */
   function znackaPuvodu(z) {
     if (!z.puvod || z.puvod === "DESÚ") return "";
     return ' <span class="puvod">převzato: ' + esc(z.puvod) + '</span>';
@@ -56,9 +97,29 @@ var Deska = (function () {
     return null;
   }
 
+  /* Na kiosku zůstává stránka otevřená celé dny. Bez tohohle by dokumenty
+     nezmizely o půlnoci a deska by se v okamžik přechodu nepřepnula. */
+  function naplanujObnovu() {
+    var ted = new Date();
+    var pulnoc = new Date(ted.getFullYear(), ted.getMonth(), ted.getDate() + 1, 0, 0, 5);
+    var cil = pulnoc;
+    var p = okamzikPrechodu();
+    if (p && p > ted && p < cil) cil = new Date(p.getTime() + 5000);
+
+    var za = cil.getTime() - ted.getTime();
+    /* setTimeout má strop kolem 24,8 dne; delší čekání se dělí na kroky. */
+    var krok = Math.min(za, 60 * 60 * 1000);
+    setTimeout(function () {
+      if (new Date() >= cil) { location.reload(); } else { naplanujObnovu(); }
+    }, krok);
+  }
+
   return {
+    URADY: URADY, urad: urad, klicUradu: klicUradu,
+    jePoPrechodu: jePoPrechodu, okamzikPrechodu: okamzikPrechodu,
     dnesIso: dnesIso, dnesCesky: dnesCesky, esc: esc,
     vyveseneDnes: vyveseneDnes, poradi: poradi,
-    kategorie: kategorie, znackaPuvodu: znackaPuvodu, najdi: najdi
+    kategorie: kategorie, znackaPuvodu: znackaPuvodu, najdi: najdi,
+    naplanujObnovu: naplanujObnovu
   };
 })();

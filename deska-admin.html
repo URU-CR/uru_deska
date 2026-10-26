@@ -201,6 +201,17 @@ tbody tr:nth-child(even) td { background: var(--radek); }
         Stáhni <code>data.js</code> a nahraj ho do kořene webu. Přílohy patří do složky
         <code>prilohy/</code> pod přesně těmi názvy, které jsou v kontrolním seznamu.
       </p>
+      <div class="mrizka m2" style="margin-bottom:14px">
+        <div>
+          <label for="fPrechodDatum">Přechod DESÚ → ÚRÚ: datum</label>
+          <input type="date" id="fPrechodDatum" value="2027-01-01">
+        </div>
+        <div>
+          <label for="fPrechodCas">Čas</label>
+          <input type="text" id="fPrechodCas" value="00:00" placeholder="hh:mm">
+        </div>
+      </div>
+      <p class="napoveda" id="nahledPrechodu"></p>
       <div>
         <label for="fUpozorneni">Text upozornění na desce <span style="font-weight:400">(prázdné = nezobrazí se)</span></label>
         <input type="text" id="fUpozorneni" placeholder="např. Úřední deska je dočasně provozována ve zjednodušené podobě.">
@@ -456,6 +467,7 @@ function vykresli() {
     " z desky DESÚ, " + (zaznamy.length - zDesu) + " převzatých) a <strong>" + pocetPriloh + "</strong> příloh.";
 
   zkontroluj();
+  nahledPrechodu();
 }
 
 /* --------------------------------------------------------- kontroly */
@@ -549,9 +561,13 @@ function vyrobData() {
     };
   });
   var up = $("fUpozorneni").value.trim();
-  return "/* Úřední deska ÚRÚ ČR — data vygenerovaná " + iso2cz(dnesIso()) + " */\n" +
+  var prechod = okamzikPrechodu();
+  return "/* Úřední deska — data vygenerovaná " + iso2cz(dnesIso()) + " */\n" +
          "window.EDESKA = " + JSON.stringify(cista, null, 1) + ";\n" +
-         "window.EDESKA_UPOZORNENI = " + JSON.stringify(up) + ";\n";
+         "window.EDESKA_UPOZORNENI = " + JSON.stringify(up) + ";\n" +
+         "/* Do tohoto okamžiku vystupuje deska jako DESÚ a skrývá převzatá\n" +
+         "   vyvěšení; od něj jako ÚRÚ ČR a zobrazí je. Místní čas. */\n" +
+         "window.EDESKA_PRECHOD = " + JSON.stringify(prechod) + ";\n";
 }
 
 function vyrobCsv() {
@@ -562,6 +578,34 @@ function vyrobCsv() {
     });
   });
   return "﻿" + r.join("\n") + "\n";
+}
+
+function okamzikPrechodu() {
+  var d = $("fPrechodDatum").value;
+  var c = ($("fPrechodCas").value || "00:00").trim();
+  if (!d) return "";
+  if (!/^\d{1,2}:\d{2}$/.test(c)) return "";
+  var cc = c.split(":");
+  return d + "T" + ("0" + cc[0]).slice(-2) + ":" + cc[1] + ":00";
+}
+
+function nahledPrechodu() {
+  var t = okamzikPrechodu();
+  var el = $("nahledPrechodu");
+  if (!t) {
+    el.innerHTML = '<span style="color:#A02020">Neplatné datum nebo čas — ' +
+      'deska by se chovala jako ÚRÚ od začátku.</span>';
+    return;
+  }
+  var kdy = new Date(t), ted = new Date();
+  var prevzata = zaznamy.filter(function (z) { return z.puvod && z.puvod !== "DESÚ"; }).length;
+  el.innerHTML = "Do " + esc(iso2cz(t.slice(0, 10))) + " " + esc(t.slice(11, 16)) +
+    " se deska zobrazuje jako <strong>DESÚ</strong> bez " + prevzata +
+    " převzatých vyvěšení, poté jako <strong>ÚRÚ ČR</strong> včetně nich. " +
+    (kdy > ted
+      ? "Dnes je tedy v podobě DESÚ."
+      : "<strong>Tento okamžik už nastal</strong> — deska se zobrazuje jako ÚRÚ. " +
+        "Pro vyzkoušení podoby DESÚ nastav datum do budoucna.");
 }
 
 /* ------------------------------------------------------------ obsluha */
@@ -721,8 +765,13 @@ $("souborZaloha").addEventListener("change", function (ev) {
   ev.target.value = "";
 });
 
+["fPrechodDatum", "fPrechodCas"].forEach(function (id) {
+  $(id).addEventListener("input", nahledPrechodu);
+});
+
 nacti();
 vykresli();
+nahledPrechodu();
 })();
 </script>
 </body>
